@@ -11,4 +11,4 @@ Završni projekat je osmišeljen tako da proveri naša znanja stečena tokom SQL
 ## Pretpostavke o zadacima
 
 - U delu A, kod zadatka 7 uzeta je pretpostavka da se autogolovi ne računaju kao priznati golovi igraču.
--
+- u delu B kod zadatka 3 odigrane utakmice sa nepoznatom posetom nisu uračunate u prosek.
