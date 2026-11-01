@@ -105,3 +105,37 @@ ORDER BY golovi DESC
 LIMIT 5;
 
 -- Kvalitet podataka:
+
+WITH iz_me AS(
+    SELECT match_id, SUM(CASE WHEN event_type IN ('goal', 'penalty_goal', 'own_goal') THEN 1 END) AS broj_golova_me
+    FROM match_events
+    WHERE event_type IN ('goal', 'penalty_goal', 'own_goal')
+    GROUP BY match_id
+)
+SELECT m.match_id, m.kickoff_ts,(m.home_goals + m.away_goals) AS broj_golova_m, e.broj_golova_me
+FROM matches m
+LEFT JOIN iz_me e ON m.match_id = e.match_id
+WHERE  (m.home_goals + m.away_goals) <> COALESCE(e.broj_golova_me, 0) AND season ='2024/25';
+
+SELECT m.match_id, th.team_name, ta.team_name, DATE(m.kickoff_ts), m.home_goals, m.away_goals
+FROM matches m
+JOIN teams th ON th.team_id = m.home_team_id
+JOIN teams ta ON ta.team_id = m.away_team_id
+WHERE match_id = 2227;
+
+SELECT *
+FROM match_events
+WHERE match_id = 2227
+ORDER BY event_type;
+
+--Postoji neslaganje u broju golova iz match_events tabele i matches tabele,Na meču broj 2227, između Brackley Athletic i Pemberton United odigranog 2025-01-25 po podacima iz match_events postoji 4 pogodaka, a iz tabele matches postoji 3.
+
+SELECT player_id, COUNT(*) AS broj_pojavljivanja
+FROM match_events
+WHERE player_id NOT IN (
+    SELECT player_id
+    FROM players
+)
+GROUP BY player_id;
+
+-- postoji neslaganje u tabeli matches_events, igrač sa player_id brojem 99999 ne postoji u tabeli player_id.
