@@ -17,8 +17,8 @@
 ## 2. Po mesecima
 
 >- **Najviše utakmica po mesecu:** Decembar 2024 ukupno 52 utakmice.
->- **Najviše golova po mesecu):** Decembar 2024 ukupno 145 golova.
->- **Najviše golova po utakmici po mesecu):** Avgust 2024 3.54 gola po meču.
+>- **Najviše golova po mesecu:** Decembar 2024 ukupno 145 golova.
+>- **Najviše golova po utakmici po mesecu:** Avgust 2024 3.54 gola po meču.
 
 
 ## 3. Publika
@@ -52,4 +52,7 @@
 
 ## 6. Kvalitet podataka
 
+> - Postoji neslaganje u broju golova iz match_events tabele i matches tabele,Na meču broj 2227, između Brackley Athletic i Pemberton United odigranog 2025-01-25 po podacima iz match_events postoji 4 pogodaka, a iz tabele matches postoji 3.
+>
+> - Postoji neslaganje u tabeli matches_events, igrač sa player_id brojem 99999 ne postoji u tabeli player_id.
 

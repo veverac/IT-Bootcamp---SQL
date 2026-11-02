@@ -78,43 +78,46 @@ ORDER BY broj_utakmica DESC;
 -- 9. Који судија је у сезони 2024/25 имао највећи удео утакмица у којима је досуђен бар једанпенал, дат или промашен? 
 
 WITH penal AS (
-    SELECT r.referee_name,
-        SUM (CASE WHEN e.event_type IN ('penalty_goal', 'penalty_miss') THEN 1 ELSE 0 END) AS broj_penala
-    FROM match_events e
-    JOIN matches m ON m.match_id = e.match_id
-    JOIN referees r ON r.referee_id = m.referee_id
-    WHERE m.season = '2024/25'
-    GROUP BY r.referee_name
+    SELECT COUNT (DISTINCT m.match_id) AS broj_utakmica_penal, m.referee_id
+    FROM matches m
+    JOIN match_events e ON m.match_id = e.match_id
+    WHERE m.season = '2024/25' AND e.event_type IN ('penalty_goal', 'penalty_miss')
+    GROUP BY m.referee_id
 ),
- ukupno AS (
-    SELECT SUM (broj_penala) AS ukupno_penala
-    FROM penal
+ sudija AS (
+    SELECT COUNT (referee_id) AS broj_utakmica_po_sudiji, referee_id
+    FROM matches 
+    WHERE season = '2024/25' AND status = 'played'
+    GROUP BY referee_id
 )
-SELECT  referee_name, ROUND (broj_penala / (SELECT ukupno_penala FROM ukupno)*100.0,2) AS udeo
-FROM penal
-GROUP BY referee_name, broj_penala
+SELECT  r.referee_name, ROUND (broj_utakmica_penal/ (broj_utakmica_po_sudiji)*100.0,2) AS udeo
+FROM penal p
+JOIN referees r on r.referee_id = p.referee_id
+JOIN sudija s on s.referee_id = r.referee_id
 ORDER BY udeo DESC;
 
--- Najveći udeo utakmica sa dosuđenim bar jednim penalom imao je Peter Lindgren	10.85 %.
+-- Najveći udeo utakmica sa dosuđenim bar jednim penalom imao je Peter Lindgren	45 %.
 
 
 -- 10.Који тренер је освојио највише бодова у утакмицама у којима је његов тим губио на полувремену? Рачунајте и домаће и гостујуће утакмице.
 
 WITH sel_utakmice AS (
-SELECT match_id, 
-    CASE WHEN home_goals_ht < away_goals_ht AND home_goals > away_goals THEN home_team_id END AS team_id
+SELECT match_id, kickoff_ts, home_team_id AS team_id,
+    CASE WHEN home_goals_ht < away_goals_ht AND home_goals > away_goals THEN 3  
+         WHEN home_goals_ht < away_goals_ht AND home_goals = away_goals THEN 1 END AS broj_bodova
 FROM matches
-WHERE (home_goals_ht < away_goals_ht AND home_goals > away_goals)
+WHERE (home_goals_ht < away_goals_ht AND home_goals >= away_goals)
 UNION
-SELECT match_id, 
-       CASE WHEN home_goals_ht > away_goals_ht AND home_goals < away_goals THEN away_team_id END AS team_id
+SELECT match_id, kickoff_ts, away_team_id,
+       CASE WHEN home_goals_ht > away_goals_ht AND home_goals < away_goals THEN 3 
+            WHEN home_goals_ht > away_goals_ht AND home_goals = away_goals THEN 1 END AS broj_bodova
 FROM matches
-WHERE (home_goals_ht > away_goals_ht AND home_goals < away_goals)
+WHERE (home_goals_ht > away_goals_ht AND home_goals <= away_goals)
 )
-SELECT ms.manager_name, COUNT (*) as broj_utakmica
+SELECT ms.manager_name, SUM (broj_bodova) as ukupno_bodova
 FROM sel_utakmice su
-JOIN manager_spells ms ON ms.team_id = su.team_id
+JOIN manager_spells ms ON ms.team_id = su.team_id AND start_date <= kickoff_ts AND COALESCE(end_date, '9999-12-31') >= kickoff_ts
 GROUP BY ms.manager_name
-ORDER BY broj_utakmica DESC;
+ORDER BY ukupno_bodova DESC;
 
--- Zoran Tošić je osvojio najviše bodova u utakmicama u kojima je njegov tim gubio na poluv, ukupno 12 bodova.
+-- Zoran Tošić je osvojio najviše bodova u utakmicama u kojima je njegov tim gubio na poluvremenu, ukupno 18 bodova.
